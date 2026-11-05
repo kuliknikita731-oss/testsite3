@@ -1,4 +1,18 @@
 document.documentElement.classList.add("js");
+// Після оновлення сторінки (F5, «потягнути вниз») завжди починаємо з верху головної.
+// Якорі розділів (#kviz, #faq…) при завантаженні теж скидаються. Прямі посилання на країни (#chile тощо) працюють як раніше.
+(function(){
+ try{
+  var nav=performance.getEntriesByType("navigation")[0];
+  var sect=["top","why","kviz","countries","compare","faq"].indexOf(location.hash.slice(1))>-1;
+  if((nav&&nav.type==="reload")||sect){
+   if("scrollRestoration" in history)history.scrollRestoration="manual";
+   if(location.hash)history.replaceState(null,"",location.pathname+location.search);
+   window.scrollTo({top:0,left:0,behavior:"instant"});
+   addEventListener("load",function(){setTimeout(function(){window.scrollTo({top:0,left:0,behavior:"instant"});history.scrollRestoration="auto"},200)});
+  }
+ }catch(e){}
+})();
 function F(s){return '<img class="fi" alt="" src="data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'>"+s+"</svg>")+'">'}
 var FL_CL="<rect width='30' height='10' fill='#fff'/><rect y='10' width='30' height='10' fill='#D52B1E'/><rect width='10' height='10' fill='#0039A6'/><circle cx='5' cy='5' r='2' fill='#fff'/>";
 var FL_UY="<rect width='30' height='20' fill='#fff'/><g fill='#0038A8'><rect y='2.2' width='30' height='2.2'/><rect y='6.7' width='30' height='2.2'/><rect y='11.1' width='30' height='2.2'/><rect y='15.6' width='30' height='2.2'/></g><rect width='11' height='11' fill='#fff'/><circle cx='5.5' cy='5.5' r='2.6' fill='#FCD116'/>";
@@ -11,7 +25,7 @@ function sec(t,b){return '<section><div class="wrap"><h2>'+t+'</h2>'+b+'</div></
 var TBD='<span class="chip">уточнюється</span>';
 
 var C=[
-{id:"chile",k:"cl",f:F(FL_CL),name:"Чилі",tag:"ВНЖ без інвестицій",badge:"без інвестицій",hs:"ВНЖ без інвестицій",price:"від 1500 USD",
+{id:"chile",k:"cl",f:F(FL_CL),name:"Чилі",tag:"ВНЖ без інвестицій",badge:"без інвестицій",hp:"від $1500",hs:"ВНЖ 2 міс",price:"від 1500 USD",
  lead:"Одна зі стабільних країн регіону. ВНЖ можна отримати на підставі віддаленої роботи або доходу з-за кордону, без купівлі нерухомості та місцевої компанії.",
  why2:"підходить для віддаленої роботи, бізнесу та довгострокової стратегії",
  facts:[["Підстава","Підбирається індивідуально"],["Інвестиції","Не потрібні"],["Подача","Можлива дистанційно"]],
@@ -26,7 +40,7 @@ var C=[
  ["Пошук роботи","від 300 до 500 USD "+TBD,[],"Опис послуги уточнюється."]],
  out:["Умови оплати та перелік витрат, що не входять у вартість (державні збори, переклади), уточнюються. "+TBD]},
 
-{id:"uruguay",k:"uy",f:F(FL_UY),name:"Уругвай",tag:"ПМЖ одразу, паспорт Уругваю",badge:"ПМЖ за 1–4 міс",hs:"ПМЖ одразу",price:"від 2500 USD",
+{id:"uruguay",k:"uy",f:F(FL_UY),name:"Уругвай",tag:"ПМЖ одразу, паспорт Уругваю",badge:"ПМЖ за 1–4 міс",hp:"від $2500",hs:"ПМЖ одразу",price:"від 2500 USD",
  lead:"Одна з найстабільніших і найбезпечніших країн регіону з відкритою міграційною політикою. Українці в’їжджають без візи й подають документи вже всередині країни.",
  why2:"підходить для спокійного життя, сім’ї та шляху до громадянства",
  facts:[["Підстава","Приватні причини"],["Перший документ","Дозвіл на 2 роки + Cédula en trámite"],["Громадянство","Через 3 роки з сім’єю або 5 років одному"]],
@@ -42,7 +56,7 @@ var C=[
  out:["подача документів не в Монтевідео","відкриття банківського рахунку","реєстрація юрособи або ІП","державні мита та збори, переклади","допомога в організації пологів","пошук житла на довгу оренду (річний контракт)"],
  pay:["50% передоплата по прильоту","50% після отримання першої седули ВНЖ"]},
 
-{id:"ecuador",k:"ec",f:F(FL_EC),name:"Еквадор",tag:"ВНЖ за дипломом онлайн",badge:"ВНЖ дистанційно",hs:"ВНЖ за дипломом",price:"від 1700 USD",
+{id:"ecuador",k:"ec",f:F(FL_EC),name:"Еквадор",tag:"ВНЖ за дипломом онлайн",badge:"ВНЖ дистанційно",hp:"від $1700",hs:"За дипломом",price:"від 1700 USD",
  lead:"ВНЖ оформлюється на підставі вищої освіти. Приїжджати для оформлення не потрібно: процедура проходить дистанційно через консульство.",
  why2:"підходить, якщо потрібен статус «про запас» і дистанційне оформлення",
  facts:[["Підстава","Вища освіта (диплом)"],["Подача","Дистанційно, через консульство"],["ВНЖ","2 роки, продовження без повторної перевірки диплома"]],
@@ -77,10 +91,21 @@ function cview(c){
 
 // головна
 $("#cards").innerHTML=C.map(card).join('')+'<div class="country add">Незабаром з’являться нові країни</div>';
-$("#cmp").innerHTML='<tr><th></th>'+C.map(c=>'<th>'+c.f+' '+c.name+'</th>').join('')+'</tr>'+CMP.map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join('');
+function cmpHTML(){
+ var d='<div class="cmpd"><table><thead><tr><th></th>'+C.map(c=>'<th><span class="cn">'+c.f+c.name+'</span></th>').join('')+'</tr></thead><tbody>'+CMP.map(r=>'<tr><td class="rk">'+r[0]+'</td>'+C.map((c,i)=>'<td>'+r[i+1]+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+ var m='<div class="cmpm"><div class="ctabs" role="tablist">'+C.map((c,i)=>'<button type="button" role="tab" class="ctab" data-i="'+i+'">'+c.f+' '+c.name+'</button>').join('')+'</div><div class="cpanel" id="cpanel" role="tabpanel"></div></div>';
+ return d+m;
+}
+function setTab(i){
+ document.querySelectorAll(".ctab").forEach(function(t,k){t.classList.toggle("on",k==i);t.setAttribute("aria-selected",k==i)});
+ var p=$("#cpanel");p.innerHTML=CMP.map(r=>'<div class="kv"><span class="k">'+r[0]+'</span><span class="v">'+r[i+1]+'</span></div>').join('');
+ p.classList.remove("pa");void p.offsetWidth;p.classList.add("pa");
+}
+$("#cmp").innerHTML=cmpHTML();setTab(0);
+$("#cmp").addEventListener("click",function(e){var b=e.target.closest(".ctab");if(b)setTab(+b.dataset.i)});
 $("#crows").innerHTML=C.map(rowCard).join('')+'<div class="crow add">Незабаром з’являться нові країни</div>';
 $("#pills").innerHTML='<a href="#why">Навіщо ВНЖ?</a><a href="#kviz">Підбір програми</a>'+C.map(c=>'<a href="#'+c.id+'">'+c.f+' '+c.name+'</a>').join('')+'<a href="#compare">Порівняння</a><a href="#faq">Часті питання</a><i class="pind" aria-hidden="true"></i>';
-$("#hcards").innerHTML=C.map(c=>'<a class="hcard" href="#'+c.id+'"><span class="fl">'+c.f+'</span><span class="ht"><b>'+c.name+'</b><small>'+c.hs+'</small></span></a>').join('');
+$("#hcards").innerHTML=C.map(c=>'<a class="hcard" href="#'+c.id+'"><span class="fl">'+c.f+'</span><span class="ht"><b>'+c.name+'</b><span class="mt"><i>'+c.hp+'</i><i>'+c.hs+'</i></span></span></a>').join('');
 $("#finH").innerHTML=fin();
 document.querySelectorAll(".lang button").forEach(b=>b.onclick=function(){document.querySelectorAll(".lang button").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true")});
 
@@ -96,16 +121,16 @@ function split(el){
 }
 function reveal(){
  document.querySelectorAll("#top .wrap>h2,#top .hero h1").forEach(function(el){if(el.dataset.sp)return;el.dataset.sp=1;split(el);el.classList.add("sp");io?io.observe(el):el.classList.add("in")});
- document.querySelectorAll("#top .country,#top .fact,#top .steps li,#top details,#top .scroll,#top .final,#top .pi,#top .crow,#top .wrap>p").forEach(function(el){if(el.classList.contains("rv"))return;el.classList.add("rv");io?io.observe(el):el.classList.add("in")})
+ document.querySelectorAll("#top .country,#top .fact,#top .steps li,#top details,#top .scroll,#top .cmpd,#top .ctabs,#top .final,#top .pi,#top .crow,#top .wrap>p").forEach(function(el){if(el.classList.contains("rv"))return;el.classList.add("rv");io?io.observe(el):el.classList.add("in")})
 }
 
 // маршрути: #chile, #uruguay, #ecuador, інакше головна
 function route(){
  var h=location.hash.slice(1),c=C.find(x=>x.id==h);
  $("#home").hidden=!!c;$("#cpage").hidden=!c;
- closeQuiz();
- if(c){$("#cpage").innerHTML=cview(c);window.scrollTo(0,0);document.title=c.name+": легалізація для українців | Grosmeister-Relocation"}
- else{document.title="Grosmeister-Relocation: релокація до Латинської Америки";var el=h&&document.getElementById(h);el?el.scrollIntoView():window.scrollTo(0,0)}
+
+ if(c){$("#cpage").innerHTML=cview(c);window.scrollTo(0,0);document.title=c.name+": легалізація для українців | Grosmeister Relocation"}
+ else{document.title="Grosmeister Relocation: релокація до Латинської Америки";if(h){navUntil=Date.now()+1200;setTimeout(spyLater,1300)}var el=h&&document.getElementById(h);el?el.scrollIntoView():window.scrollTo(0,0)}
  reveal();spy();
 }
 
@@ -123,24 +148,19 @@ function makeQuiz(body,prog,modal){
    var best=C.slice().sort((a,b)=>(score[b.k]||0)-(score[a.k]||0))[0];
    body.innerHTML='<div class="result"><h2 class="rt">Вам, імовірно, підійде '+best.name+'</h2>'+card(best)+'<p class="why">Ця країна '+best.why2+'. Точний варіант визначимо на консультації.</p><a class="btn gold block" href="'+TG+'" target="_blank" rel="noopener">Надіслати результат у Telegram</a><p></p><button class="btn line block again" style="color:var(--ink)">Пройти знову</button></div>';
    body.querySelector(".again").onclick=function(){step=0;score={};go()};
-   body.querySelector(".country .btn.line").addEventListener("click",closeQuiz);
   }
  }
  return function(){step=0;score={};go()};
 }
-var startModal=makeQuiz($("#qbody"),$("#qprog"),true);
-function openQuiz(){$("#quiz").classList.add("open");document.body.style.overflow="hidden";startModal()}
-function closeQuiz(){$("#quiz").classList.remove("open");document.body.style.overflow=""}
 makeQuiz($("#qinline"),$("#qprog2"),false)();
-document.querySelectorAll("[data-quiz]").forEach(b=>b.onclick=openQuiz);
-$("#qclose").onclick=closeQuiz;
 // підсвітка поточного розділу в плашці під шапкою
-var SPY=["why","kviz","countries","compare","faq"],spyKey="",tick=false;
+var SPY=["why","kviz","countries","compare","faq"],spyKey="",tick=false,navUntil=0;
 function spy(){
  var pills=$("#pills"),links=[].slice.call(pills.querySelectorAll("a")),on=[];
  if(!$("#cpage").hidden){
   var h=location.hash.slice(1);on=links.filter(a=>a.getAttribute("href")=="#"+h);
  }else{
+  if(window.scrollY<80&&location.hash&&!C.some(c=>"#"+c.id==location.hash)&&Date.now()>navUntil){try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
   var line=pills.getBoundingClientRect().bottom+24,id="";
   SPY.forEach(function(s){var el=document.getElementById(s);if(!el)return;var r=el.getBoundingClientRect();if(r.top<=line&&r.bottom>line)id=s});
   on=links.filter(a=>{var t=a.getAttribute("href").slice(1);return id=="countries"?C.some(c=>c.id==t):(id&&t==id)});
@@ -181,3 +201,16 @@ document.addEventListener("click",function(e){
  }
 });
 addEventListener("hashchange",route);route();
+
+// кнопка Telegram: з’являється після прокрутки, на телефоні періодично розкривається в підпис
+(function(){
+ var tg=document.querySelector(".tg");if(!tg)return;
+ var shown=false,openT=0,loopT=0,calm=matchMedia("(prefers-reduced-motion:reduce)").matches;
+ function open(){if(calm||!shown)return;var t=tg.querySelector(".tgt");tg.style.setProperty("--tgw",t.scrollWidth+"px");tg.classList.add("open");clearTimeout(openT);openT=setTimeout(function(){tg.classList.remove("open")},4800)}
+ function check(){
+  var on=window.scrollY>350;
+  if(on&&!shown){shown=true;tg.classList.add("show");setTimeout(open,700);loopT=setInterval(function(){if(!tg.matches(":hover"))open()},25000)}
+  else if(!on&&shown){shown=false;tg.classList.remove("show","open");clearInterval(loopT);clearTimeout(openT)}
+ }
+ addEventListener("scroll",check,{passive:true});check();
+})();
